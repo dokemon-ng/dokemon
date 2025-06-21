@@ -71,52 +71,52 @@ func logAllNetworkInterfaces() {
 }
 
 func getMainIP() string {
-    // Get all relevant IPs
-    localIP := getLocalNetworkIP()
-    
-    // Get all network interfaces
-    interfaces, err := net.Interfaces()
-    if err != nil {
-        return ""
-    }
+	// Get all relevant IPs
+	localIP := getLocalNetworkIP()
 
-    // Collect all ZeroTier IPs (interfaces starting with "zt")
-    var ztIPs []string
-    // Collect all Tailscale IPs (interfaces starting with "tailscale")
-    var tsIPs []string
+	// Get all network interfaces
+	interfaces, err := net.Interfaces()
+	if err != nil {
+		return ""
+	}
 
-    for _, iface := range interfaces {
-        ifaceName := iface.Name
-        
-        // Check for ZeroTier interfaces
-        if strings.HasPrefix(ifaceName, "zt") {
-            if ip := getInterfaceIP(ifaceName); ip != "" {
-                ztIPs = append(ztIPs, "zt:"+ip)
-            }
-        }
-        
-        // Check for Tailscale interfaces
-        if strings.HasPrefix(ifaceName, "tailscale") {
-            if ip := getInterfaceIP(ifaceName); ip != "" {
-                tsIPs = append(tsIPs, "ts:"+ip)
-            }
-        }
-    }
+	// Collect all ZeroTier IPs (interfaces starting with "zt")
+	var ztIPs []string
+	// Collect all Tailscale IPs (interfaces starting with "tailscale")
+	var tsIPs []string
 
-    // Build the version string components
-    var components []string
-    if localIP != "" {
-        components = append(components, localIP)
-    }
-    // Add all ZeroTier IPs
-    components = append(components, ztIPs...)
-    // Add all Tailscale IPs
-    components = append(components, tsIPs...)
-    
-    if len(components) > 0 {
-        return strings.Join(components, "+")
-    }
-    return ""
+	for _, iface := range interfaces {
+		ifaceName := iface.Name
+
+		// Check for ZeroTier interfaces
+		if strings.HasPrefix(ifaceName, "zt") {
+			if ip := getInterfaceIP(ifaceName); ip != "" {
+				ztIPs = append(ztIPs, "zt:"+ip)
+			}
+		}
+
+		// Check for Tailscale interfaces
+		if strings.HasPrefix(ifaceName, "tailscale") {
+			if ip := getInterfaceIP(ifaceName); ip != "" {
+				tsIPs = append(tsIPs, "ts:"+ip)
+			}
+		}
+	}
+
+	// Build the version string components
+	var components []string
+	if localIP != "" {
+		components = append(components, localIP)
+	}
+	// Add all ZeroTier IPs
+	components = append(components, ztIPs...)
+	// Add all Tailscale IPs
+	components = append(components, tsIPs...)
+
+	if len(components) > 0 {
+		return strings.Join(components, "+")
+	}
+	return ""
 }
 func getLocalNetworkIP() string {
 	// Try Docker bridge method first

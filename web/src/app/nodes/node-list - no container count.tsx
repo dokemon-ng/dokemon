@@ -198,7 +198,7 @@ export default function NodeList() {
                   <TableCell>
                     <div className="flex items-center">
                       <NodeStatusIcon nodeHead={item} />
-                      <span 
+                      <span
                         className="cursor-pointer hover:text-blue-600 hover:underline"
                         onClick={() => navigate(`/nodes/${item.id}/containers`)}
                       >
@@ -301,7 +301,7 @@ function getAgentVersion(nodeHead: INodeHead): string {
     const version = mainParts[0] || '';
     const rest = mainParts.length > 1 ? mainParts[1] : '';
     const arch = rest.split('@')[0] || null;
-    
+
     let formatted = `v${version}`;
     if (arch) formatted += ` (${arch})`;
     return formatted;
@@ -310,13 +310,13 @@ function getAgentVersion(nodeHead: INodeHead): string {
   return "-";
 }
 
-function extractIPs(agentVersion: string): { 
-  ip?: string[], 
-  zt?: string[], 
-  ts?: string[] 
+function extractIPs(agentVersion: string): {
+  ip?: string[],
+  zt?: string[],
+  ts?: string[]
 } | null {
   if (!agentVersion) return null;
-  
+
   const mainParts = agentVersion.split('-');
   const rest = mainParts.length > 1 ? mainParts[1] : '';
   const ips = rest.split('@').length > 1 ? rest.split('@')[1] : null;
@@ -325,7 +325,7 @@ function extractIPs(agentVersion: string): {
 
   const result: { ip?: string[], zt?: string[], ts?: string[] } = {};
   const ipComponents = ips.split('+');
-  
+
   for (const component of ipComponents) {
     if (component.includes('.')) {
       if (component.startsWith('zt:')) {
@@ -348,7 +348,7 @@ function NodeIPsDisplay({ nodeHead }: { nodeHead: INodeHead }) {
   if (!nodeHead.agentVersion) return <span>-</span>;
 
   const ips = extractIPs(nodeHead.agentVersion);
-  
+
   if (!ips || (!ips.ip?.length && !ips.zt?.length && !ips.ts?.length)) {
     return <span>-</span>;
   }
@@ -375,10 +375,10 @@ function NodeIPsDisplay({ nodeHead }: { nodeHead: INodeHead }) {
           </PopoverContent>
         </Popover>
       )}
-      
 
 
-      
+
+
       {/* ZeroTier IP popup */}
       {(ips.zt?.length ?? 0) > 0 && (
         <Popover>
@@ -399,7 +399,7 @@ function NodeIPsDisplay({ nodeHead }: { nodeHead: INodeHead }) {
           </PopoverContent>
         </Popover>
       )}
-      
+
       {/* Tailscale IP popup */}
       {(ips.ts?.length ?? 0) > 0 && (
         <Popover>

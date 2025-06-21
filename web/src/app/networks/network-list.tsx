@@ -32,6 +32,8 @@ import { Input } from "@/components/ui/input"
 import { MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/24/solid"
 import { Button } from "@/components/ui/button"
 import NetworkCreateDialog from "./network-create"
+import { usePagination } from "@/lib/pagination"
+import PaginationFooter from "@/components/ui/pagination-footer"
 
 const systemNetworks = [
   "none",
@@ -65,6 +67,11 @@ export default function NetworkList() {
     initialSortDirection: "asc",
     filterKeys: ['name', 'driver', 'inUse'] as (keyof INetwork)[]
   });
+
+  const [paginationConfig, paginationFunctions, paginatedNetworks] = usePagination(
+    sortedNetworks,
+    10
+  )
 
   if (isLoading) return <Loading />
 
@@ -246,10 +253,10 @@ export default function NetworkList() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sortedNetworks.length === 0 ? (
+            {paginatedNetworks.length === 0 ? (
               <TableNoData colSpan={6} />
             ) : (
-              sortedNetworks.map((item) => (
+              paginatedNetworks.map((item) => (
                 <TableRow key={item.id}>
                   <TableCell>{item.id.substring(0, 12)}</TableCell>
                   <TableCell>{item.name}</TableCell>
@@ -271,6 +278,10 @@ export default function NetworkList() {
             )}
           </TableBody>
         </Table>
+        <PaginationFooter
+          paginationConfig={paginationConfig}
+          paginationFunctions={paginationFunctions}
+        />
       </MainContent>
     </MainArea>
   )

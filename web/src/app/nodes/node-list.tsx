@@ -1,12 +1,12 @@
 import Loading from "@/components/widgets/loading";
 import { Breadcrumb, BreadcrumbCurrent } from "@/components/widgets/breadcrumb";
-import { 
-  MagnifyingGlassIcon, 
-  PencilIcon, 
+import {
+  MagnifyingGlassIcon,
+  PencilIcon,
   XMarkIcon,
-  ExclamationTriangleIcon 
+  ExclamationTriangleIcon
 } from "@heroicons/react/24/solid";
-import { RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -41,10 +41,12 @@ import { TableNoData } from "@/components/widgets/table-no-data";
 import DeleteDialog from "@/components/delete-dialog";
 import { useFilterAndSort } from "@/lib/useFilterAndSort";
 import { Input } from "@/components/ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import axios from "axios";
 import apiBaseUrl from "@/lib/api-base-url";
+import { usePagination } from "@/lib/pagination";
+import PaginationFooter from "@/components/ui/pagination-footer";
 
 export default function NodeList() {
   const navigate = useNavigate();
@@ -67,8 +69,6 @@ export default function NodeList() {
   const [refreshInterval, setRefreshInterval] = useState<number>(60);
   const [lastRefreshTime, setLastRefreshTime] = useState<number>(Date.now());
   const [currentTime, setCurrentTime] = useState<number>(Date.now());
-  const [pageSize, setPageSize] = useState<number>(10);
-  const [currentPage, setCurrentPage] = useState<number>(1);
 
   const {
     searchTerm,
@@ -82,26 +82,15 @@ export default function NodeList() {
     filterKeys: ['name', 'environment', 'agentVersion'] as (keyof INodeHead)[]
   });
 
-  const totalItems = sortedNodes.length;
-  const totalPages = Math.ceil(totalItems / pageSize);
-  const paginatedNodes = sortedNodes.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
+  const [paginationConfig, paginationFunctions, paginatedNodes] = usePagination(
+    sortedNodes,
+    10
   );
 
-  const handlePageSizeChange = (value: string) => {
-    setPageSize(Number(value));
-    setCurrentPage(1);
-  };
 
-  const goToPage = (page: number) => {
-    setCurrentPage(Math.max(1, Math.min(page, totalPages)));
-  };
-
-  // Update current time every second when refresh interval is active
   useEffect(() => {
     let intervalId: NodeJS.Timeout;
-    
+
     if (refreshInterval > 0) {
       intervalId = setInterval(() => {
         setCurrentTime(Date.now());
@@ -134,11 +123,11 @@ export default function NodeList() {
     try {
       setContainerCounts(prev => ({
         ...prev,
-        [nodeId]: { 
-          ...prev[nodeId], 
+        [nodeId]: {
+          ...prev[nodeId],
           running: undefined,
           stopped: undefined,
-          loading: true, 
+          loading: true,
           error: undefined,
           hasData: false
         }
@@ -196,31 +185,31 @@ export default function NodeList() {
     const refreshTime = Date.now();
     setLastRefreshTime(refreshTime);
     setCurrentTime(refreshTime);
-    
+
     if (!nodes?.items) return;
-    
+
     // Implement rate-limited parallel loading
     const BATCH_SIZE = 3;
     const DELAY_BETWEEN_BATCHES = 500;
-    
+
     for (let i = 0; i < nodes.items.length; i += BATCH_SIZE) {
       const batch = nodes.items.slice(i, i + BATCH_SIZE);
-      
-      const batchPromises = batch.map(node => 
+
+      const batchPromises = batch.map(node =>
         retryableFetch(node.id, node.online)
       );
-      
+
       await Promise.all(batchPromises);
-      
+
       if (i + BATCH_SIZE < nodes.items.length) {
         await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_BATCHES));
       }
     }
-    
+
     async function retryableFetch(nodeId: number, nodeOnline: boolean, attempt = 1): Promise<void> {
       const MAX_RETRIES = 2;
       const RETRY_DELAY = 1000;
-      
+
       try {
         const success = await fetchContainerCounts(nodeId, nodeOnline);
         if (!success && attempt < MAX_RETRIES) {
@@ -242,7 +231,7 @@ export default function NodeList() {
 
     fetchAllCounts();
     let refreshIntervalId: NodeJS.Timeout;
-    
+
     if (refreshInterval > 0) {
       refreshIntervalId = setInterval(fetchAllCounts, refreshInterval * 1000);
     }
@@ -325,11 +314,11 @@ export default function NodeList() {
         </TopBarActions>
       </TopBar>
       <MainContent>
-<div className="mb-4 flex items-center justify-end">
-  <div className="relative w-full max-w-md">
-    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-      <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
-    </div>
+        <div className="mb-4 flex items-center justify-end">
+          <div className="relative w-full max-w-md">
+            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+              <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+            </div>
             <Input
               type="text"
               className="pl-10"
@@ -394,7 +383,7 @@ export default function NodeList() {
                   <TableCell>
                     <div className="flex items-center">
                       <NodeStatusIcon nodeHead={item} />
-                      <span 
+                      <span
                         className="cursor-pointer hover:text-blue-600 hover:underline"
                         onClick={() => navigate(`/nodes/${item.id}/containers`)}
                       >
@@ -403,7 +392,7 @@ export default function NodeList() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <NodeContainersDisplay 
+                    <NodeContainersDisplay
                       counts={containerCounts[item.id] || { loading: false, hasData: false }}
                       onRefresh={() => handleRefreshCounts(item.id, item.online)}
                       nodeOnline={item.online}
@@ -473,31 +462,14 @@ export default function NodeList() {
             )}
           </TableBody>
         </Table>
-        {/* Pagination controls */}
         <div className="mt-4 flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-600 dark:text-gray-400">
-              Showing {(currentPage - 1) * pageSize + 1}-
-              {Math.min(currentPage * pageSize, totalItems)} of {totalItems} nodes
-            </span>
-            <Select
-              value={pageSize.toString()}
-              onValueChange={handlePageSizeChange}
-            >
-              <SelectTrigger className="h-8 w-[70px]">
-                <SelectValue placeholder={pageSize} />
-              </SelectTrigger>
-              <SelectContent>
-                {[10, 20, 25, 50, 100].map((size) => (
-                  <SelectItem key={size} value={size.toString()}>
-                    {size}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <PaginationFooter
+            paginationConfig={paginationConfig}
+            paginationFunctions={paginationFunctions}
+            className="flex-1"
+          />
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-5 ml-4">
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-500">Refresh:</span>
               <Select
@@ -525,68 +497,6 @@ export default function NodeList() {
                 )}
               </div>
             )}
-          </div>
-
-
-          <div className="flex items-center space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => goToPage(1)}
-              disabled={currentPage === 1}
-            >
-              First
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => goToPage(currentPage - 1)}
-              disabled={currentPage === 1}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-
-            {/* Page number buttons - show up to 5 pages around current */}
-            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-              let pageNum;
-              if (totalPages <= 5) {
-                pageNum = i + 1;
-              } else if (currentPage <= 3) {
-                pageNum = i + 1;
-              } else if (currentPage >= totalPages - 2) {
-                pageNum = totalPages - 4 + i;
-              } else {
-                pageNum = currentPage - 2 + i;
-              }
-
-              return (
-                <Button
-                  key={pageNum}
-                  variant={currentPage === pageNum ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => goToPage(pageNum)}
-                >
-                  {pageNum}
-                </Button>
-              );
-            })}
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => goToPage(currentPage + 1)}
-              disabled={currentPage === totalPages}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => goToPage(totalPages)}
-              disabled={currentPage === totalPages}
-            >
-              Last
-            </Button>
           </div>
         </div>
       </MainContent>
@@ -620,7 +530,7 @@ function getAgentVersion(nodeHead: INodeHead): string {
     const version = mainParts[0] || '';
     const rest = mainParts.length > 1 ? mainParts[1] : '';
     const arch = rest.split('@')[0] || null;
-    
+
     let formatted = `v${version}`;
     if (arch) formatted += ` (${arch})`;
     return formatted;
@@ -629,13 +539,13 @@ function getAgentVersion(nodeHead: INodeHead): string {
   return "-";
 }
 
-function extractIPs(agentVersion: string): { 
-  ip?: string[], 
-  zt?: string[], 
-  ts?: string[] 
+function extractIPs(agentVersion: string): {
+  ip?: string[],
+  zt?: string[],
+  ts?: string[]
 } | null {
   if (!agentVersion) return null;
-  
+
   const mainParts = agentVersion.split('-');
   const rest = mainParts.length > 1 ? mainParts[1] : '';
   const ips = rest.split('@').length > 1 ? rest.split('@')[1] : null;
@@ -644,7 +554,7 @@ function extractIPs(agentVersion: string): {
 
   const result: { ip?: string[], zt?: string[], ts?: string[] } = {};
   const ipComponents = ips.split('+');
-  
+
   for (const component of ipComponents) {
     if (component.includes('.')) {
       if (component.startsWith('zt:')) {
@@ -667,7 +577,7 @@ function NodeIPsDisplay({ nodeHead }: { nodeHead: INodeHead }) {
   if (!nodeHead.agentVersion) return <span>-</span>;
 
   const ips = extractIPs(nodeHead.agentVersion);
-  
+
   if (!ips || (!ips.ip?.length && !ips.zt?.length && !ips.ts?.length)) {
     return <span>-</span>;
   }
@@ -693,7 +603,7 @@ function NodeIPsDisplay({ nodeHead }: { nodeHead: INodeHead }) {
           </PopoverContent>
         </Popover>
       )}
-      
+
       {(ips.zt?.length ?? 0) > 0 && (
         <Popover>
           <PopoverTrigger asChild>
@@ -713,7 +623,7 @@ function NodeIPsDisplay({ nodeHead }: { nodeHead: INodeHead }) {
           </PopoverContent>
         </Popover>
       )}
-      
+
       {(ips.ts?.length ?? 0) > 0 && (
         <Popover>
           <PopoverTrigger asChild>
@@ -767,7 +677,7 @@ function NodeContainersDisplay({ counts, onRefresh, nodeOnline }: NodeContainers
         <span className="text-xs text-yellow-600">
           {counts.error}
         </span>
-        <button 
+        <button
           onClick={(e) => {
             e.stopPropagation();
             onRefresh();
@@ -792,7 +702,7 @@ function NodeContainersDisplay({ counts, onRefresh, nodeOnline }: NodeContainers
 
   if (!counts.hasData) {
     return (
-      <button 
+      <button
         onClick={(e) => {
           e.stopPropagation();
           onRefresh();
@@ -831,7 +741,7 @@ function NodeContainersDisplay({ counts, onRefresh, nodeOnline }: NodeContainers
           </PopoverContent>
         </Popover>
       )}
-      
+
       {counts.stopped !== undefined && (
         <Popover>
           <PopoverTrigger asChild>
@@ -850,8 +760,8 @@ function NodeContainersDisplay({ counts, onRefresh, nodeOnline }: NodeContainers
           </PopoverContent>
         </Popover>
       )}
-      
-      <button 
+
+      <button
         onClick={(e) => {
           e.stopPropagation();
           onRefresh();

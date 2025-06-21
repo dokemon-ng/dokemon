@@ -40,6 +40,9 @@ import { IVolume } from "@/lib/api-models";
 import { convertByteToMb, toastFailed, toastSuccess } from "@/lib/utils";
 import apiBaseUrl from "@/lib/api-base-url";
 import { useFilterAndSort } from "@/lib/useFilterAndSort";
+import { usePagination } from "@/lib/pagination";
+import PaginationFooter from "@/components/ui/pagination-footer";
+
 
 export default function VolumeList() {
   const { nodeId } = useParams();
@@ -66,6 +69,11 @@ export default function VolumeList() {
     initialSortDirection: "asc",
     filterKeys: ['driver', 'name', 'inUse'] as (keyof IVolume)[]
   });
+
+  const [paginationConfig, paginationFunctions, paginatedVolumes] = usePagination(
+    sortedVolumes,
+    10
+  )
 
   if (isLoading) return <Loading />;
 
@@ -318,10 +326,10 @@ export default function VolumeList() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sortedVolumes.length === 0 ? (
+            {paginatedVolumes.length === 0 ? (
               <TableNoData colSpan={4} />
             ) : (
-              sortedVolumes.map((item) => (
+              paginatedVolumes.map((item) => (
                 <TableRow key={item.name}>
                   <TableCell>{item.driver}</TableCell>
                   <TableCell>{item.name}</TableCell>
@@ -341,6 +349,11 @@ export default function VolumeList() {
             )}
           </TableBody>
         </Table>
+        <PaginationFooter
+          paginationConfig={paginationConfig}
+          paginationFunctions={paginationFunctions}
+          pageSizeOptions={[5, 10, 25, 50, 100]}
+        />
       </MainContent>
     </MainArea>
   );
