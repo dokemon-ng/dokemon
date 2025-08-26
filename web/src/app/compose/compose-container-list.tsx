@@ -199,7 +199,7 @@ function ContainersTable({
     setDeleteContainerConfirmationOpen(true)
   }
 
- 
+
   return (
     <>
       {deleteContainerConfirmationOpen && (

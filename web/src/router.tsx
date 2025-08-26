@@ -28,6 +28,7 @@ import ComposeLibraryEditGitHubProject from "./app/compose-library/compose-libra
 import ComposeAddGitHub from "./app/compose/compose-add-github"
 import ComposeDefinition from "./app/compose/compose-definition"
 import ComposeAddLocal from "./app/compose/compose-add-local"
+import DiskUsage from "./app/disks/disk-usage"
 
 const router = createBrowserRouter([
   {
@@ -134,6 +135,10 @@ const router = createBrowserRouter([
       {
         path: "environments",
         element: <EnvironmentList />,
+      },
+      {
+        path: "disk",
+        element: <DiskUsage />,
       },
       {
         path: "variables",

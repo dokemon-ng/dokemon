@@ -1,6 +1,8 @@
 package dockerapi
 
-import "github.com/dokemon-ng/dokemon/pkg/server/store"
+import (
+	"github.com/dokemon-ng/dokemon/pkg/server/store"
+)
 
 // Containers
 
@@ -302,4 +304,17 @@ type DockerComposeProjectDefinition struct {
 type DockerComposeProjectDefinitionResponse struct {
 	ProjectName string `json:"projectName"`
 	Definition  string `json:"definition"`
+}
+
+type DiskUsageSummary struct {
+	Categories []DiskUsageCategory `json:"categories"`
+}
+
+type DiskUsageCategory struct {
+	Type               string `json:"type"`
+	Total              int    `json:"total"`
+	Active             int    `json:"active"`
+	Size               string `json:"size"`
+	Reclaimable        string `json:"reclaimable"`
+	ReclaimablePercent string `json:"reclaimablePercent"`
 }

@@ -197,3 +197,16 @@ export interface IVariableHead {
   isSecret: boolean
   values: { [key: string]: string }
 }
+
+export interface IDiskUsageCategory {
+  type: string
+  total: number
+  active: number
+  size: string
+  reclaimable: string
+  reclaimablePercent: string
+}
+
+export interface IDiskUsageSummary {
+  categories: IDiskUsageCategory[]
+}

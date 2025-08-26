@@ -187,6 +187,9 @@ func (h *Handler) Register(e *echo.Echo) {
 	variables.GET("/uniquename", h.IsUniqueVariableName)
 	variables.GET("/:id/uniquename", h.IsUniqueVariableNameExcludeItself)
 
+	disk_usage := v1.Group("/disk")
+	disk_usage.GET("", h.GetDiskUsage)
+
 	variablevalues := variables.Group("/:variableId/values/:environmentId")
 	variablevalues.PUT("", h.CreateOrUpdateVariableValue)
 	variablevalues.GET("", h.GetVariableValue)

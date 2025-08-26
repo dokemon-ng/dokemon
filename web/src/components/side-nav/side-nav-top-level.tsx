@@ -1,5 +1,6 @@
 import {
   Bars3BottomLeftIcon,
+  CircleStackIcon,
   ComputerDesktopIcon,
   LockClosedIcon,
   SunIcon,
@@ -26,6 +27,11 @@ const items = [
     title: "Environments",
     link: "/environments",
     icon: <SunIcon className="h-6 w-6 shrink-0" aria-hidden="true" />,
+  },
+  {
+    title: "Disk Usage",
+    link: "/disk",
+    icon: <CircleStackIcon className="h-6 w-6 shrink-0" aria-hidden="true" />,
   },
   {
     title: "Variables",
