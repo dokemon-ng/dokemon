@@ -51,7 +51,6 @@ func (h *Handler) GetSwarmNodeByID(c echo.Context) error {
 	var err error
 
 	nodeId, err := strconv.Atoi(c.Param("nodeId"))
-
 	if err != nil {
 		return unprocessableEntity(c, errors.New("nodeId should be an integer"))
 	}
@@ -81,7 +80,6 @@ func (h *Handler) RemoveSwarmClusterNode(c echo.Context) error {
 	var err error
 
 	nodeId, err := strconv.Atoi(c.Param("nodeId"))
-
 	if err != nil {
 		return unprocessableEntity(c, errors.New("nodeId should be an integer"))
 	}
@@ -107,7 +105,6 @@ func (h *Handler) RemoveSwarmClusterNode(c echo.Context) error {
 func (h *Handler) UpdateSwarmClusterNode(c echo.Context) error {
 	var err error
 	nodeId, err := strconv.Atoi(c.Param("nodeId"))
-
 	if err != nil {
 		return unprocessableEntity(c, errors.New("nodeId should be an integer"))
 	}
@@ -145,13 +142,11 @@ func (h *Handler) UpdateSwarmClusterNode(c echo.Context) error {
 		Name:         updateRequest.Name,
 		Labels:       updateRequest.Labels,
 	})
-
 }
 
 func (h *Handler) PromoteOrDemoteSwarmClusterNode(c echo.Context) error {
 	var err error
 	nodeId, err := strconv.Atoi(c.Param("nodeId"))
-
 	if err != nil {
 		return unprocessableEntity(c, errors.New("nodeId should be an integer"))
 	}
@@ -181,5 +176,4 @@ func (h *Handler) PromoteOrDemoteSwarmClusterNode(c echo.Context) error {
 		Id:     request.Id,
 		Action: request.Action,
 	})
-
 }

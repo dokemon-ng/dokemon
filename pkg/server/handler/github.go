@@ -23,11 +23,11 @@ const (
 )
 
 type gitUrlParts struct {
-	Provider gitProvider
 	Owner    string
 	Repo     string
 	Ref      string
 	Path     string
+	Provider gitProvider
 }
 
 func getGitUrlParts(rawurl string) (*gitUrlParts, error) {
@@ -88,7 +88,7 @@ func getGitFileContent(url string, token string) (string, error) {
 		return "", err
 	}
 	client := &http.Client{}
-	request, err := http.NewRequest("GET", rawUrl, nil)
+	request, err := http.NewRequest("GET", rawUrl, http.NoBody)
 	if err != nil {
 		return "", err
 	}

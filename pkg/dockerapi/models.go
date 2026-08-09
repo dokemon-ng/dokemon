@@ -337,20 +337,20 @@ type BuildCachePruneRequest struct {
 }
 
 type ClusterInfo struct {
-	ID                     string   `json:"id"`
 	Name                   string   `json:"name"`
 	CreatedAt              string   `json:"created_at"`
 	UpdatedAt              string   `json:"updated_at"`
 	Version                string   `json:"version"`
 	TLSInfo                string   `json:"tls_info"`
-	RootRotationInProgress bool     `json:"root_rotation_in_progress"`
-	DefaultAddrPool        []string `json:"default_addr_pool"`
-	SubnetSize             uint32   `json:"subnet_size"`
-	DataPathPort           uint32   `json:"data_path_port"`
+	ID                     string   `json:"id"`
 	Spec                   string   `json:"spec"`
+	DefaultAddrPool        []string `json:"default_addr_pool"`
 	NodeCount              int      `json:"node_count"`
-	ManagerCount           int      `json:"manager_count"`
 	WorkerCount            int      `json:"worker_count"`
+	ManagerCount           int      `json:"manager_count"`
+	DataPathPort           uint32   `json:"data_path_port"`
+	SubnetSize             uint32   `json:"subnet_size"`
+	RootRotationInProgress bool     `json:"root_rotation_in_progress"`
 }
 
 type ClusterSwarmNodeList struct {
@@ -366,19 +366,17 @@ type SwarmNodeInfo struct {
 	ID           string `json:"id"`
 	Name         string `json:"name"`
 	Role         string `json:"role"`
-	CPU          int64  `json:"cpu"`
-	Memory       int64  `json:"memory"`
 	Engine       string `json:"engine"`
 	IPAddress    string `json:"ip_address"`
 	Status       string `json:"status"`
 	Availability string `json:"availability"`
+	CPU          int64  `json:"cpu"`
+	Memory       int64  `json:"memory"`
 }
 
 type SwarmNodeInfoDetailsResponse struct {
 	Name          string   `json:"name"`
 	OSInfo        string   `json:"os"`
-	CPU           int64    `json:"cpu"`
-	Memory        int64    `json:"memory"`
 	Version       string   `json:"version"`
 	VolumeType    string   `json:"volume"`
 	NetworkPlugin string   `json:"network"`
@@ -386,6 +384,8 @@ type SwarmNodeInfoDetailsResponse struct {
 	Availability  string   `json:"availability"`
 	Status        string   `json:"status"`
 	Labels        []string `json:"labels"`
+	CPU           int64    `json:"cpu"`
+	Memory        int64    `json:"memory"`
 }
 
 type SwarmNodeInfoId struct {
@@ -398,11 +398,11 @@ type ClusterSwarmNodeRemoveRequest struct {
 }
 
 type SwarmNodeUpdateRequest struct {
+	Labels       map[string]string `json:"labels"`
 	Id           string            `json:"id" validate:"required,max=100"`
-	Role         string            `json:"role"` // worker or manager
+	Role         string            `json:"role"`
 	Availability string            `json:"availability"`
 	Name         string            `json:"name"`
-	Labels       map[string]string `json:"labels"`
 }
 
 type SwarmNodePromoteOrDemoteRequest struct {
