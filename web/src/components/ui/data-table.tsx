@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/table"
 import PaginationFooter from "@/components/ui/pagination-footer";
 import { ArrowUpDown } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
 interface DataTableColumnHeaderProps {
   column: any;
@@ -36,6 +36,10 @@ interface DataTableProps<TData, TValue> {
   paginationFunctions?: any
   noDataMessage?: string
   onGlobalFilterChange?: (value: string) => void
+  maxHeight?: string
+  scrollable?: boolean
+  autoHeight?: boolean
+  offsetHeight?: number
 }
 
 export function DataTableColumnHeader({ column, title }: DataTableColumnHeaderProps) {
@@ -59,7 +63,6 @@ export function DataTableColumnHeader({ column, title }: DataTableColumnHeaderPr
   );
 }
 
-
 export function DataTable<TData, TValue>({
   columns,
   data,
@@ -71,8 +74,14 @@ export function DataTable<TData, TValue>({
   paginationConfig,
   paginationFunctions,
   onGlobalFilterChange,
+  maxHeight = "calc(100vh - 200px)", // Default to full screen height minus some padding
+  scrollable = true,
+  autoHeight = false,
+  offsetHeight = 0,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([])
+  const [tableHeight, setTableHeight] = useState<string>("calc(100vh - 200px)")
+  const containerRef = useRef<HTMLDivElement>(null)
 
   const table = useReactTable({
     data,
@@ -91,10 +100,37 @@ export function DataTable<TData, TValue>({
     },
   })
 
+  useEffect(() => {
+    if (autoHeight && containerRef.current) {
+      const calculateHeight = () => {
+        const container = containerRef.current
+        if (!container) return
+
+        const rect = container.getBoundingClientRect()
+        const windowHeight = window.innerHeight
+        const remainingHeight = windowHeight - rect.top - offsetHeight
+
+        setTableHeight(`${Math.max(200, remainingHeight)}px`)
+      }
+
+      calculateHeight()
+      window.addEventListener('resize', calculateHeight)
+
+      return () => window.removeEventListener('resize', calculateHeight)
+    }
+  }, [autoHeight, offsetHeight])
+
+  const getContainerHeight = () => {
+    if (autoHeight) {
+      return tableHeight
+    }
+    return maxHeight
+  }
+
   return (
-    <div className="space-y-4">
+    <div ref={containerRef} className={autoHeight ? "h-full flex flex-col" : "space-y-4"}>
       {onGlobalFilterChange && (
-        <div className="mb-2">
+        <div className={autoHeight ? "flex-shrink-0 mb-2" : "mb-2"}>
           <input
             type="text"
             placeholder="Search..."
@@ -104,70 +140,79 @@ export function DataTable<TData, TValue>({
           />
         </div>
       )}
-      <div className="rounded-md border shadow-md">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead
-                    key={header.id}
-                    className={header.id === "actions" ? "w-[40px]" : ""}
-                  >
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  className={
-                    onRowClickId || onRowClick ? "hover:bg-muted/50" : ""
-                  }
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                  onClick={() => {
-                    if (onRowClickId) onRowClickId(row.getValue("id"))
-                    if (onRowClick) onRowClick(row.original)
-                  }}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
+      <div className={`rounded-md border shadow-md ${autoHeight ? "flex-1 min-h-0" : ""}`}>
+        <div
+          className={scrollable ? "overflow-auto h-full" : ""}
+          style={scrollable ? {
+            maxHeight: getContainerHeight()
+          } : undefined}
+        >
+          <Table>
+            <TableHeader className={scrollable ? "sticky top-0 bg-background z-10" : ""}>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <TableHead
+                      key={header.id}
+                      className={header.id === "actions" ? "w-[40px]" : ""}
+                    >
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                    </TableHead>
                   ))}
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
-                  {noDataMessage}
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    className={
+                      onRowClickId || onRowClick ? "hover:bg-muted/50 cursor-pointer" : ""
+                    }
+                    key={row.id}
+                    data-state={row.getIsSelected() && "selected"}
+                    onClick={() => {
+                      if (onRowClickId) onRowClickId(row.getValue("id"))
+                      if (onRowClick) onRowClick(row.original)
+                    }}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-24 text-center"
+                  >
+                    {noDataMessage}
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </div>
 
       {paginationConfig && paginationFunctions && (
-        <PaginationFooter
-          paginationConfig={paginationConfig}
-          paginationFunctions={paginationFunctions}
-        />
+        <div className={autoHeight ? "flex-shrink-0" : ""}>
+          <PaginationFooter
+            paginationConfig={paginationConfig}
+            paginationFunctions={paginationFunctions}
+          />
+        </div>
       )}
     </div>
   )
