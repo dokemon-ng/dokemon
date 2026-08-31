@@ -52,20 +52,19 @@ func GetSwarmClusterInfo() (*ClusterInfo, error) {
 	tlsInfo := "Disabled"
 	if clusterInfo.TLSInfo.TrustRoot != "" {
 		tlsInfo = fmt.Sprintf("TrustRoot: %s", util.ShortenString(clusterInfo.TLSInfo.TrustRoot, 50))
-
 	}
 
 	var specInfo strings.Builder
-	if clusterInfo.Spec.Annotations.Name != "" {
-		specInfo.WriteString(fmt.Sprintf("Name: %s", clusterInfo.Spec.Annotations.Name))
+	if clusterInfo.Spec.Name != "" {
+		specInfo.WriteString(fmt.Sprintf("Name: %s", clusterInfo.Spec.Name))
 	}
 
 	response := &ClusterInfo{
 		ID:                     clusterInfo.ID,
-		Name:                   clusterInfo.Spec.Annotations.Name,
-		CreatedAt:              clusterInfo.Meta.CreatedAt.String(),
-		UpdatedAt:              clusterInfo.Meta.UpdatedAt.String(),
-		Version:                fmt.Sprintf("Index: %d", clusterInfo.Meta.Version.Index),
+		Name:                   clusterInfo.Spec.Name,
+		CreatedAt:              clusterInfo.CreatedAt.String(),
+		UpdatedAt:              clusterInfo.UpdatedAt.String(),
+		Version:                fmt.Sprintf("Index: %d", clusterInfo.Version.Index),
 		TLSInfo:                tlsInfo,
 		RootRotationInProgress: clusterInfo.RootRotationInProgress,
 		DefaultAddrPool:        clusterInfo.DefaultAddrPool,
@@ -208,17 +207,17 @@ func SwarmClusterUpdateNode(req *SwarmNodeUpdateRequest) error {
 	}
 
 	nodeSpec := node.Spec
-	nodeSpec.Annotations.Name = req.Name
+	nodeSpec.Name = req.Name
 	nodeSpec.Availability = swarm.NodeAvailability(req.Availability)
 	nodeSpec.Role = swarm.NodeRole(req.Role)
 	if req.Labels != nil {
-		if nodeSpec.Annotations.Labels == nil {
-			nodeSpec.Annotations.Labels = make(map[string]string)
+		if nodeSpec.Labels == nil {
+			nodeSpec.Labels = make(map[string]string)
 		}
-		maps.Copy(nodeSpec.Annotations.Labels, req.Labels)
+		maps.Copy(nodeSpec.Labels, req.Labels)
 	}
 
-	err = cli.NodeUpdate(context.Background(), req.Id, node.Meta.Version, nodeSpec)
+	err = cli.NodeUpdate(context.Background(), req.Id, node.Version, nodeSpec)
 	if err != nil {
 		return err
 	}
@@ -251,7 +250,7 @@ func SwarmClusterPromoteOrDemoteNode(req *SwarmNodePromoteOrDemoteRequest) error
 
 	nodeSpec := node.Spec
 	nodeSpec.Role = targetRole
-	err = cli.NodeUpdate(context.Background(), req.Id, node.Meta.Version, nodeSpec)
+	err = cli.NodeUpdate(context.Background(), req.Id, node.Version, nodeSpec)
 	if err != nil {
 		return err
 	}
